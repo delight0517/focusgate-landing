@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script type="application/json" id="web-deploy-manager-catalog">
+{
+  "schema": "web-deploy-manager/v1",
+  "exportedAt": "2026-06-16T09:36:37.734935Z",
+  "managerSelfDownload": {
+    "showOnLanding": true,
+    "version": "1.6.30 (2606161834)",
+    "platformDownloads": {}
+  },
+  "landingSite": {
+    "siteName": "",
+    "siteTagline": "",
+    "previewOutputDir": "",
+    "deployOutputDir": "",
+    "githubRepoUrl": "https://github.com/delight0517/focusgate-landing",
+    "liveSiteUrl": "",
+    "creatorName": "",
+    "creatorRole": "",
+    "creatorBio": "",
+    "creatorEmoji": "✨",
+    "siteAccentColor": "#6366f1"
+  },
+  "apps": [
+    {
+      "id": "isle",
+      "name": "Isle",
+      "tagline": "알고리즘에 휘둘리지 않는 나만의 콘텐츠 섬",
+      "description": "RSS·유튜브·브런치를 한곳에서 큐레이션하고, SNS·Safari·다른 앱을 스케줄로 차단합니다. Hive 로컬 저장 — 업데이트 시 동일 applicationId·번들 ID로 데이터가 유지됩니다.",
+      "downloadUrl": "https://github.com/delight0517/isle/releases/download/v1.6.0/isle_v1.6.0+205_android.apk",
+      "category": "productivity",
+      "version": "1.6.0+205",
+      "platforms": [
+        "android"
+      ],
+      "primaryPlatform": "android",
+      "platformDownloads": {},
+      "platformChannels": {
+        "android": "direct"
+      },
+      "downloadLabel": "Android 다운로드 (.apk)",
+      "icon": "🏝️",
+      "featured": true,
+      "githubUrl": "https://github.com/delight0517/isle",
+      "accentColor": "#6366f1"
+    },
+    {
+      "id": "focusgate",
+      "name": "FocusGate",
+      "tagline": "원터치로 시작하는 완벽한 집중 시간",
+      "description": "한 번의 터치로 집중 세션을 시작하세요. 타이머와 세션 기록을 깔끔한 인터페이스로 관리하는 생산성 앱입니다.",
+      "downloadUrl": "[여기에_exe파일_링크_입력]",
+      "category": "productivity",
+      "version": "1.0",
+      "platforms": [
+        "windows",
+        "macos",
+        "android",
+        "ios"
+      ],
+      "primaryPlatform": "windows",
+      "platformDownloads": {},
+      "platformChannels": {},
+      "downloadLabel": "Windows용 다운로드 (.exe)",
+      "icon": "⏱",
+      "featured": true
+    }
+  ]
+}
+</script>
+  <script>
+(function () {
+  const el = document.getElementById('web-deploy-manager-catalog');
+  if (!el) return;
+  try {
+    const catalog = JSON.parse(el.textContent || '{}');
+    window.WDM_CATALOG = catalog;
+    window.APPS = catalog.apps || [];
+    window.SITE = catalog.landingSite || {};
+    window.MANAGER_SELF = catalog.managerSelfDownload || {};
+  } catch (e) {
+    console.warn('[WDM] catalog parse failed', e);
+  }
+})();
+</script>
+  <script>
+(function () {
+  const WDM = window.WDM = window.WDM || {};
+
+  WDM.PLATFORM_DL = {
+    android: { label: 'Android', emoji: '🤖', mobile: true, exts: ['.apk'] },
+    ios: { label: 'iOS', emoji: '📱', mobile: true, exts: ['.ipa'] },
+    windows: { label: 'Windows', emoji: '🪟', mobile: false, exts: ['.exe', '.msi', '.zip'] },
+    macos: { label: 'macOS', emoji: '🍎', mobile: false, exts: ['.dmg', '.pkg'] },
+    linux: { label: 'Linux', emoji: '🐧', mobile: false, exts: ['.appimage', '.deb', '.tar.gz', '.zip'] }
+  };
+
+  WDM.detectVisitorPlatform = function () {
+    const ua = navigator.userAgent || '';
+    const plat = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
+    const isAndroid = /android/i.test(ua);
+    const isIOS = /iphone|ipad|ipod/i.test(ua)
+      || (plat.includes('mac') && navigator.maxTouchPoints > 1);
+    if (isIOS) return 'ios';
+    if (isAndroid) return 'android';
+    if (/win/i.test(ua) || plat.includes('win')) return 'windows';
+    if (/mac/i.test(ua) || plat.includes('mac')) return 'macos';
+    if (/linux/i.test(ua) || plat.includes('linux')) return 'linux';
+    return null;
+  };
+
+  WDM.isMobileVisitor = function () {
+    const p = WDM.detectVisitorPlatform();
+    return p === 'android' || p === 'ios';
+  };
+
+  WDM.platformMeta = function (pid) {
+    return WDM.PLATFORM_DL[pid] || { label: pid, emoji: '📦', mobile: false, exts: [] };
+  };
+
+  WDM.platformUrl = function (app, pid) {
+    const map = app.platformDownloads || {};
+    if (map[pid] && String(map[pid]).trim()) return String(map[pid]).trim();
+    if (pid === app.primaryPlatform && app.downloadUrl) return String(app.downloadUrl).trim();
+    return '';
+  };
+
+  WDM.parseGithubRepo = function (url) {
+    try {
+      const u = new URL(url.trim());
+      if (!u.hostname.includes('github.com')) return null;
+      const parts = u.pathname.split('/').filter(Boolean);
+      if (parts.length < 2) return null;
+      return [parts[0], parts[1].replace(/\.git$/, '')];
+    } catch { return null; }
+  };
+
+  WDM.isStoreUrl = function (url) {
+    const u = (url || '').toLowerCase();
+    return u.includes('play.google.com')
+      || u.includes('apps.apple.com')
+      || u.includes('testflight.apple.com')
+      || u.includes('apps.microsoft.com')
+      || u.includes('microsoft.com/store')
+      || u.includes('macappstore.apple.com');
+  };
+
+  WDM.isDirectFileUrl = function (url, platformId) {
+    const u = (url || '').trim().toLowerCase();
+    if (!u || u.startsWith('[')) return false;
+    if (u.includes('/releases/download/')) return true;
+    const meta = WDM.platformMeta(platformId);
+    return meta.exts.some(function (ext) {
+      return u.endsWith(ext) || u.includes(ext + '?');
+    });
+  };
+
+  WDM.fetchGithubLatestAssets = async function (repoUrl) {
+    const slug = WDM.parseGithubRepo(repoUrl);
+    if (!slug) return null;
+    const res = await fetch(
+      'https://api.github.com/repos/' + slug[0] + '/' + slug[1] + '/releases/latest',
+      { headers: { Accept: 'application/vnd.github+json' } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (data.assets || []).map(function (a) {
+      return { name: a.name, url: a.browser_download_url };
+    });
+  };
+
+  WDM.pickAssetUrl = function (assets, platformId) {
+    if (!assets || !assets.length) return null;
+    const meta = WDM.platformMeta(platformId);
+    const lower = function (s) { return (s || '').toLowerCase(); };
+    for (let i = 0; i < meta.exts.length; i++) {
+      const ext = meta.exts[i];
+      const hit = assets.find(function (a) { return lower(a.name).endsWith(ext); });
+      if (hit) return hit.url;
+    }
+    const hints = platformId === 'windows' ? ['windows', 'win', '_win']
+      : platformId === 'macos' ? ['macos', 'mac', '_mac', 'darwin']
+      : platformId === 'android' ? ['android', '_apk']
+      : platformId === 'linux' ? ['linux', 'appimage']
+      : [platformId];
+    for (let h = 0; h < hints.length; h++) {
+      const hint = hints[h];
+      const hit = assets.find(function (a) {
+        const n = lower(a.name);
+        return n.includes(hint) && meta.exts.some(function (e) { return n.endsWith(e); });
+      });
+      if (hit) return hit.url;
+    }
+    return null;
+  };
+
+  WDM.resolveDownloadUrl = async function (url, platformId) {
+    if (!url || url.startsWith('[')) return null;
+    if (WDM.isStoreUrl(url)) return url;
+    if (WDM.isDirectFileUrl(url, platformId)) return url;
+    if (url.includes('github.com')) {
+      const assets = await WDM.fetchGithubLatestAssets(url);
+      const picked = WDM.pickAssetUrl(assets, platformId);
+      if (picked) return picked;
+    }
+    return WDM.isDirectFileUrl(url, platformId) ? url : null;
+  };
+
+  WDM.crossDeviceKind = function (pid, visitor) {
+    if (!visitor || visitor === pid) return null;
+    const target = WDM.platformMeta(pid);
+    const here = WDM.platformMeta(visitor);
+    if (target.mobile && !here.mobile) return 'need_mobile';
+    if (!target.mobile && here.mobile) return 'need_desktop';
+    return null;
+  };
+
+  WDM.closeGuide = function () {
+    document.getElementById('wdm-download-guide')?.remove();
+  };
+
+  WDM.showGuide = function (html, footerHtml) {
+    WDM.closeGuide();
+    const wrap = document.createElement('div');
+    wrap.id = 'wdm-download-guide';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(0,0,0,.72);backdrop-filter:blur(6px)';
+    wrap.innerHTML = '<div style="max-width:28rem;width:100%;border-radius:16px;padding:24px;background:#12141c;border:1px solid rgba(255,255,255,.1);color:#f4f4f5;font-family:system-ui,sans-serif">'
+      + html
+      + (footerHtml || '<button type="button" id="wdm-guide-close" style="margin-top:16px;width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">닫기</button>')
+      + '</div>';
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) WDM.closeGuide(); });
+    document.body.appendChild(wrap);
+    document.getElementById('wdm-guide-close')?.addEventListener('click', WDM.closeGuide);
+  };
+
+  WDM.copyText = async function (text) {
+    try { await navigator.clipboard.writeText(text); return true; } catch { return false; }
+  };
+
+  WDM.qrUrl = function (data) {
+    return 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + encodeURIComponent(data);
+  };
+
+  WDM.showNeedMobileGuide = function (app, pid) {
+    const meta = WDM.platformMeta(pid);
+    const pageUrl = location.href;
+    WDM.showGuide(
+      '<p style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#a5b4fc;margin:0 0 8px">' + meta.label + ' 설치</p>'
+      + '<h3 style="margin:0 0 12px;font-size:1.25rem">' + meta.emoji + ' 스마트폰에서 받아 주세요</h3>'
+      + '<p style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 16px">'
+      + meta.label + ' 앱은 PC에서 실행되지 않아요. <strong style="color:#fde68a">폰으로 이 페이지</strong>를 열면 버튼 <strong>한 번</strong>으로 설치·업데이트됩니다.</p>'
+      + '<div style="text-align:center;margin:16px 0"><img src="' + WDM.qrUrl(pageUrl) + '" width="180" height="180" alt="QR" style="border-radius:12px;background:#fff;padding:8px" /></div>'
+      + '<ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0">'
+      + '<li>QR 스캔 또는 링크를 폰으로 보내기</li>'
+      + '<li>이 페이지에서 <strong>' + meta.label + ' 다운로드</strong> 버튼</li>'
+      + '<li>이미 설치됐으면 <strong>업데이트</strong> — 데이터 유지</li>'
+      + '</ol>',
+      '<button type="button" id="wdm-copy-page-link" style="width:100%;padding:10px;border-radius:12px;border:none;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;margin-bottom:8px">🔗 이 페이지 링크 복사</button>'
+      + '<button type="button" id="wdm-guide-close" style="width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">닫기</button>'
+    );
+    setTimeout(function () {
+      document.getElementById('wdm-copy-page-link')?.addEventListener('click', async function () {
+        const ok = await WDM.copyText(pageUrl);
+        this.textContent = ok ? '✓ 복사됨' : '복사 실패 — 주소창에서 복사';
+      });
+      document.getElementById('wdm-guide-close')?.addEventListener('click', WDM.closeGuide);
+    }, 0);
+  };
+
+  WDM.showNeedDesktopGuide = function (app, pid, rawUrl, onDownload) {
+    const meta = WDM.platformMeta(pid);
+    const pageUrl = location.href;
+    WDM.showGuide(
+      '<p style="font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:#a5b4fc;margin:0 0 8px">' + meta.label + ' 설치</p>'
+      + '<h3 style="margin:0 0 12px;font-size:1.25rem">' + meta.emoji + ' PC에서 받아 주세요</h3>'
+      + '<p style="font-size:14px;color:#a1a1aa;line-height:1.6;margin:0 0 12px">'
+      + meta.label + ' 앱은 휴대폰에서 실행되지 않아요. <strong style="color:#fde68a">Windows/Mac PC</strong>에서 이 페이지를 열고 다운로드하세요.</p>'
+      + '<ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0 0 12px">'
+      + '<li>아래 링크를 PC로 보내기 (카톡·메일)</li>'
+      + '<li>PC 브라우저에서 열기 → 다운로드 버튼 한 번</li>'
+      + '<li>설치 파일 실행 → 기존 앱 있으면 <strong>업데이트</strong></li>'
+      + '</ol>',
+      '<button type="button" id="wdm-copy-page-link" style="width:100%;padding:10px;border-radius:12px;border:none;background:#4f46e5;color:#fff;font-weight:600;cursor:pointer;margin-bottom:8px">🔗 PC에 보낼 링크 복사</button>'
+      + '<button type="button" id="wdm-force-dl" style="width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.04);color:#e4e4e7;cursor:pointer;margin-bottom:8px">그래도 이 폰에 파일 받기</button>'
+      + '<button type="button" id="wdm-guide-close" style="width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:#fff;cursor:pointer">닫기</button>'
+    );
+    setTimeout(function () {
+      document.getElementById('wdm-copy-page-link')?.addEventListener('click', async function () {
+        const ok = await WDM.copyText(pageUrl);
+        this.textContent = ok ? '✓ 복사됨' : '복사 실패';
+      });
+      document.getElementById('wdm-force-dl')?.addEventListener('click', function () {
+        WDM.closeGuide();
+        if (onDownload) onDownload();
+      });
+      document.getElementById('wdm-guide-close')?.addEventListener('click', WDM.closeGuide);
+    }, 0);
+  };
+
+  WDM.showInstallHelp = function (pid) {
+    const tips = {
+      android: '<h3 style="margin:0 0 12px">📲 Android 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>다운로드된 .apk 탭</li><li>「알 수 없는 앱」 허용 (필요 시)</li><li>이미 있으면 <strong>업데이트</strong> — 데이터 유지</li></ol>',
+      ios: '<h3 style="margin:0 0 12px">📱 iOS</h3><p style="font-size:13px;color:#d4d4d8;line-height:1.6">App Store / TestFlight 페이지에서 <strong>업데이트</strong> 또는 <strong>받기</strong>를 누르세요.</p>',
+      windows: '<h3 style="margin:0 0 12px">🪟 Windows 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>다운로드된 .exe 실행</li><li>「Windows가 PC를 보호」 → <strong>추가 정보</strong> → 실행</li><li>이미 설치됐으면 <strong>업데이트</strong> — 설정·데이터 유지</li></ol>',
+      macos: '<h3 style="margin:0 0 12px">🍎 Mac 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>.dmg 열기 → 앱을 Applications로 드래그</li><li>기존 앱이 있으면 <strong>덮어쓰기</strong></li><li>데이터는 ~/Library 에 그대로 유지</li></ol>',
+      linux: '<h3 style="margin:0 0 12px">🐧 Linux</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>.AppImage → 실행 권한 부여 후 실행</li><li>.deb → 패키지 관리자로 설치</li></ol>'
+    };
+    const html = tips[pid];
+    if (html) WDM.showGuide(html);
+  };
+
+  WDM.triggerFileDownload = function (url) {
+    const a = document.createElement('a');
+    a.href = url;
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
+
+  WDM.notFoundGuide = function (pid) {
+    const meta = WDM.platformMeta(pid);
+    const exts = meta.exts.join(' · ') || '설치 파일';
+    WDM.showGuide(
+      '<h3 style="margin:0 0 12px">' + meta.emoji + ' 파일을 찾지 못했어요</h3>'
+      + '<p style="font-size:14px;color:#a1a1aa;line-height:1.6">GitHub Releases에 <strong>' + exts + '</strong> 파일이 있는지 확인해 주세요.</p>'
+      + '<p style="font-size:12px;color:#71717a;margin-top:12px">직접 링크 예:<br>'
+      + '<code style="color:#a5b4fc">…/releases/download/v1.0/앱' + (meta.exts[0] || '') + '</code></p>'
+    );
+  };
+
+  WDM._runDownload = async function (url, pid, btn) {
+    const prev = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.textContent = '준비 중…'; }
+    try {
+      const resolved = await WDM.resolveDownloadUrl(url, pid);
+      if (!resolved) {
+        WDM.notFoundGuide(pid);
+        return;
+      }
+      if (WDM.isStoreUrl(resolved)) {
+        window.open(resolved, '_blank', 'noopener');
+        return;
+      }
+      WDM.triggerFileDownload(resolved);
+      setTimeout(function () { WDM.showInstallHelp(pid); }, 1000);
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        if (prev) btn.innerHTML = prev;
+      }
+    }
+  };
+
+  WDM.startDownload = async function (app, pid, btn) {
+    const url = WDM.platformUrl(app, pid);
+    if (!url) {
+      alert('다운로드 링크가 아직 준비되지 않았어요.');
+      return;
+    }
+    const visitor = WDM.detectVisitorPlatform();
+    const cross = WDM.crossDeviceKind(pid, visitor);
+    if (cross === 'need_mobile') {
+      WDM.showNeedMobileGuide(app, pid);
+      return;
+    }
+    if (cross === 'need_desktop') {
+      WDM.showNeedDesktopGuide(app, pid, url, function () {
+        WDM._runDownload(url, pid, btn);
+      });
+      return;
+    }
+    await WDM._runDownload(url, pid, btn);
+  };
+
+  WDM.startManagerDownload = async function (pid, btn) {
+    const url = (window.MANAGER_SELF?.downloads?.[pid] || '').trim();
+    if (!url) return;
+    await WDM.startDownload({
+      id: 'web-deploy-manager',
+      primaryPlatform: pid,
+      platformDownloads: window.MANAGER_SELF?.downloads || {},
+      downloadUrl: url
+    }, pid, btn);
+  };
+
+  document.addEventListener('click', function (e) {
+    const mgr = e.target.closest('[data-wdm-manager-dl]');
+    if (mgr) {
+      e.preventDefault();
+      WDM.startManagerDownload(mgr.dataset.wdmManagerDl, mgr);
+      return;
+    }
+    const btn = e.target.closest('[data-wdm-download]');
+    if (!btn) return;
+    e.preventDefault();
+    const app = (window.APPS || []).find(function (a) { return a.id === btn.dataset.wdmApp; });
+    if (!app) return;
+    WDM.startDownload(app, btn.dataset.wdmPlatform, btn);
+  });
+})();
+</script>
+  <title>Isle · 앱 컬렉션 — 제작자가 만든 앱들을 한곳에서 만나보세요</title>
+  <meta name="description" content="제작자가 만든 앱들을 한곳에서 만나보세요" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" as="style" crossorigin
+    href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" />
+  <style>
+    :root {
+      --site-accent: #6366f1;
+      --app-accent: var(--site-accent);
+    }
+    body {
+      font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+      background: #08090e;
+      color: #f4f4f5;
+    }
+    .creator-studio {
+      position: relative;
+      overflow: hidden;
+      border-bottom: 1px solid rgba(255,255,255,.06);
+      background:
+        radial-gradient(ellipse 90% 70% at 50% -30%, color-mix(in srgb, var(--site-accent) 35%, transparent), transparent),
+        linear-gradient(180deg, #0c0d14 0%, #08090e 100%);
+    }
+    .creator-avatar {
+      width: 5.5rem; height: 5.5rem;
+      display: grid; place-items: center;
+      font-size: 2.5rem;
+      border-radius: 1.5rem;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.1);
+      box-shadow: 0 0 40px color-mix(in srgb, var(--site-accent) 40%, transparent);
+    }
+    .studio-label {
+      font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+      color: color-mix(in srgb, var(--site-accent) 80%, #fff);
+    }
+    .app-pill {
+      border: 1px solid rgba(255,255,255,.08);
+      background: rgba(255,255,255,.03);
+      transition: transform .2s, border-color .2s, box-shadow .2s;
+    }
+    .app-pill:hover { transform: translateY(-2px); }
+    .app-pill.is-active {
+      border-color: color-mix(in srgb, var(--pill-accent) 70%, transparent);
+      box-shadow: 0 0 28px color-mix(in srgb, var(--pill-accent) 35%, transparent);
+      background: color-mix(in srgb, var(--pill-accent) 12%, transparent);
+    }
+    .app-hero-glow {
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 0%, color-mix(in srgb, var(--app-accent) 28%, transparent), transparent 70%);
+    }
+    .story-block {
+      white-space: pre-line;
+      line-height: 1.85;
+      color: #cbd5e1;
+    }
+    .gallery-card {
+      border: 1px solid rgba(255,255,255,.07);
+      background: rgba(255,255,255,.02);
+      transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .gallery-card:hover {
+      transform: translateY(-4px);
+      border-color: color-mix(in srgb, var(--card-accent) 50%, transparent);
+      box-shadow: 0 16px 48px color-mix(in srgb, var(--card-accent) 18%, transparent);
+    }
+    .glass { background: rgba(18,20,28,.78); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,.06); }
+    .download-btn {
+      background: linear-gradient(135deg,#6366f1,#8b5cf6);
+      box-shadow: 0 0 40px rgba(99,102,241,.35);
+      transition: transform .25s, box-shadow .25s;
+    }
+    .download-btn:hover { transform: translateY(-3px); box-shadow: 0 0 55px rgba(99,102,241,.55); }
+    .category-btn.active { background: rgba(99,102,241,.15); border-color: rgba(99,102,241,.4); color: #c7d2fe; }
+    .app-card.featured { border-color: rgba(99,102,241,.25); box-shadow: 0 0 40px rgba(99,102,241,.08); }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,.35); }
+      50% { box-shadow: 0 0 24px 4px rgba(99,102,241,.25); }
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+    .hero-in { animation: fade-up .7s ease forwards; }
+    .hero-in-d1 { animation: fade-up .7s .1s ease forwards; opacity: 0; }
+    .hero-in-d2 { animation: fade-up .7s .2s ease forwards; opacity: 0; }
+    .hero-in-d3 { animation: fade-up .7s .3s ease forwards; opacity: 0; }
+    .app-icon-float { animation: float 4s ease-in-out infinite; }
+
+    .platform-chip {
+      opacity: 0;
+      animation: fade-up .5s ease forwards;
+      animation-delay: calc(var(--i) * 0.09s);
+      transition: transform .25s, box-shadow .25s, border-color .25s;
+      cursor: pointer;
+    }
+    .platform-chip:hover, .platform-chip.active {
+      transform: translateY(-4px) scale(1.04);
+    }
+    .platform-chip.active { animation: pulse-glow 2s ease infinite; }
+    .platform-detail {
+      transition: opacity .3s, transform .3s;
+    }
+    .platform-detail.enter { animation: fade-up .4s ease forwards; }
+    .platform-dl-btn {
+      transition: transform .2s, background .2s;
+    }
+    .platform-dl-btn:hover { transform: translateY(-2px); }
+
+    .wdm-bar {
+      background: rgba(12, 13, 18, 0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,.06);
+    }
+    .wdm-bar-btn {
+      transition: transform .2s, box-shadow .2s, border-color .2s;
+    }
+    .wdm-bar-btn:hover { transform: translateY(-1px); }
+    .wdm-bar-btn.is-current {
+      border-color: rgba(129, 140, 248, .55);
+      box-shadow: 0 0 20px rgba(99, 102, 241, .25);
+    }
+    .wdm-bar-btn.is-disabled {
+      opacity: .45;
+      pointer-events: none;
+    }
+
+    .store-btn {
+      background: rgba(255,255,255,.04);
+      border: 1px solid rgba(255,255,255,.12);
+      transition: transform .22s, box-shadow .22s, border-color .22s, background .22s;
+    }
+    .store-btn:hover {
+      transform: translateY(-2px);
+      background: rgba(255,255,255,.08);
+      border-color: rgba(129,140,248,.45);
+      box-shadow: 0 12px 40px rgba(99,102,241,.18);
+    }
+    .store-badge {
+      font-size: 10px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #a5b4fc;
+      background: rgba(99,102,241,.15);
+      border: 1px solid rgba(99,102,241,.25);
+      border-radius: 999px;
+      padding: 2px 8px;
+    }
+    .chip-store-dot {
+      width: 6px; height: 6px; border-radius: 999px;
+      background: #34d399;
+      box-shadow: 0 0 8px rgba(52,211,153,.6);
+    }
+    .platform-chip.is-visitor-match {
+      box-shadow: 0 0 0 2px rgba(52,211,153,.45), 0 0 24px rgba(52,211,153,.15);
+    }
+    .visitor-badge {
+      font-size: 9px;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: #6ee7b7;
+      background: rgba(16,185,129,.15);
+      border: 1px solid rgba(52,211,153,.35);
+      border-radius: 999px;
+      padding: 1px 6px;
+    }
+    .mismatch-banner {
+      border: 1px solid rgba(245,158,11,.4);
+      background: rgba(245,158,11,.1);
+      border-radius: 14px;
+      padding: 12px 14px;
+      text-align: left;
+    }
+    .mismatch-dl-btn {
+      background: rgba(245,158,11,.12);
+      border: 1px solid rgba(245,158,11,.45);
+      color: #fde68a;
+    }
+    .mismatch-dl-btn:hover { background: rgba(245,158,11,.2); }
+  </style>
+</head>
+<body class="h-full min-h-screen text-zinc-100 antialiased">
+  <script>
+    const PLATFORM_META = {
+      "windows": {
+        "label": "Windows",
+        "shortLabel": "Win",
+        "emoji": "🪟",
+        "description": "Windows 10/11 PC에서 실행되는 데스크톱 앱입니다.",
+        "downloadHint": "버튼 한 번 → .exe 다운로드 · 기존 앱이면 업데이트",
+        "color": "#0078D4",
+        "defaultLabel": "Windows용 다운로드"
+      },
+      "macos": {
+        "label": "macOS",
+        "shortLabel": "Mac",
+        "emoji": "🍎",
+        "description": "MacBook · iMac용 네이티브 앱입니다.",
+        "downloadHint": "버튼 한 번 → .dmg 다운로드 · Applications에 덮어쓰기",
+        "color": "#A2AAAD",
+        "defaultLabel": "macOS용 다운로드"
+      },
+      "android": {
+        "label": "Android",
+        "shortLabel": "Android",
+        "emoji": "🤖",
+        "description": "Android 스마트폰 · 태블릿에서 사용할 수 있습니다.",
+        "downloadHint": "버튼 한 번 → .apk 설치 · 기존 앱이면 업데이트",
+        "color": "#3DDC84",
+        "defaultLabel": "Android용 다운로드"
+      },
+      "ios": {
+        "label": "iOS",
+        "shortLabel": "iOS",
+        "emoji": "📱",
+        "description": "iPhone · iPad용 앱입니다.",
+        "downloadHint": "App Store / TestFlight에서 업데이트",
+        "color": "#0A84FF",
+        "defaultLabel": "iOS용 다운로드"
+      },
+      "web": {
+        "label": "Web",
+        "shortLabel": "Web",
+        "emoji": "🌐",
+        "description": "브라우저에서 바로 사용하는 웹 앱입니다.",
+        "downloadHint": "웹사이트 URL",
+        "color": "#6366F1",
+        "defaultLabel": "Web용 다운로드"
+      },
+      "linux": {
+        "label": "Linux",
+        "shortLabel": "Linux",
+        "emoji": "🐧",
+        "description": "Ubuntu 등 Linux 데스크톱용 앱입니다.",
+        "downloadHint": ".AppImage 또는 .deb 링크",
+        "color": "#FCC624",
+        "defaultLabel": "Linux용 다운로드"
+      }
+    };
+    const CHANNEL_META = {
+      "direct": {
+        "label": "직접 다운로드",
+        "ctaLabel": "다운로드",
+        "badgeLabel": "직접 배포",
+        "emoji": "⬇️",
+        "urlHint": "https://.../앱_Setup.exe 또는 .apk · .dmg 링크",
+        "isStore": false
+      },
+      "google_play": {
+        "label": "Google Play",
+        "ctaLabel": "Google Play에서 받기",
+        "badgeLabel": "공식 스토어",
+        "emoji": "▶️",
+        "urlHint": "https://play.google.com/store/apps/details?id=...",
+        "isStore": true
+      },
+      "app_store": {
+        "label": "App Store",
+        "ctaLabel": "App Store에서 받기",
+        "badgeLabel": "공식 스토어",
+        "emoji": "🍎",
+        "urlHint": "https://apps.apple.com/app/id...",
+        "isStore": true
+      },
+      "testflight": {
+        "label": "TestFlight",
+        "ctaLabel": "TestFlight에서 테스트",
+        "badgeLabel": "베타 테스트",
+        "emoji": "✈️",
+        "urlHint": "https://testflight.apple.com/join/...",
+        "isStore": true
+      },
+      "microsoft_store": {
+        "label": "Microsoft Store",
+        "ctaLabel": "Microsoft Store에서 받기",
+        "badgeLabel": "공식 스토어",
+        "emoji": "🪟",
+        "urlHint": "https://apps.microsoft.com/store/detail/...",
+        "isStore": true
+      },
+      "mac_app_store": {
+        "label": "Mac App Store",
+        "ctaLabel": "Mac App Store에서 받기",
+        "badgeLabel": "공식 스토어",
+        "emoji": "🛍️",
+        "urlHint": "https://apps.apple.com/app/id...",
+        "isStore": true
+      }
+    };
+    const CATEGORY_LABELS = { productivity: '생산성', utility: '유틸리티', security: '보안' };
+    const APPS = [ {
+        id: 'isle',
+        name: 'Isle',
+        tagline: '알고리즘에 휘둘리지 않는 나만의 콘텐츠 섬',
+        description: 'RSS·유튜브·브런치를 한곳에서 큐레이션하고, SNS·Safari·다른 앱을 스케줄로 차단합니다. Hive 로컬 저장 — 업데이트 시 동일 applicationId·번들 ID로 데이터가 유지됩니다.',
+        category: 'productivity',
+        platforms: ['android'],
+        primaryPlatform: 'android',
+        platformDownloads: {  },
+        platformChannels: { 'android': 'direct' },
+        version: '1.6.0+205',
+        featured: true,
+        icon: '🏝️',
+        downloadUrl: 'https://github.com/delight0517/isle/releases/download/v1.6.0/isle_v1.6.0+205_android.apk',
+        downloadLabel: 'Android 다운로드 (.apk)',
+        accentColor: '#6366f1',
+        story: ''
+      },
+      {
+        id: 'focusgate',
+        name: 'FocusGate',
+        tagline: '원터치로 시작하는 완벽한 집중 시간',
+        description: '한 번의 터치로 집중 세션을 시작하세요. 타이머와 세션 기록을 깔끔한 인터페이스로 관리하는 생산성 앱입니다.',
+        category: 'productivity',
+        platforms: ['windows', 'macos', 'android', 'ios'],
+        primaryPlatform: 'windows',
+        platformDownloads: {  },
+        platformChannels: {  },
+        version: '1.0',
+        featured: true,
+        icon: '⏱',
+        downloadUrl: '[여기에_exe파일_링크_입력]',
+        downloadLabel: 'Windows용 다운로드 (.exe)',
+        accentColor: '#10b981',
+        story: ''
+      } ];
+    const SINGLE_MODE = false;
+    const MANAGER_SELF = {
+      show: true,
+      version: "1.6.30 (2606161834)",
+      downloads: {
+        windows: "",
+        macos: ""
+      }
+    };
+    const SITE = {
+      name: "Isle · 앱 컬렉션",
+      tagline: "제작자가 만든 앱들을 한곳에서 만나보세요",
+      creatorName: "Isle · 앱 컬렉션",
+      creatorRole: "앱 제작자 · 디자이너",
+      creatorBio: "안녕하세요! Isle, FocusGate 같은 앱을 만들고 있어요.\n아래에서 각 앱의 이야기를 읽고, 내 기기에 맞는 버전을 받아 보세요.",
+      creatorEmoji: "✨",
+      accent: "#6366f1"
+    };
+  </script>
+
+    <header id="wdm-bar" class="wdm-bar sticky top-0 z-50 px-4 py-3 lg:px-8"></header>
+
+  <section id="creator-studio" class="creator-studio px-6 py-16 lg:py-24"></section>
+
+  <div class="max-w-5xl mx-auto px-6 pb-24">
+    <nav id="app-nav" class="app-nav flex flex-wrap gap-2 justify-center mb-10"></nav>
+    <section id="hero" class="app-hero-glow rounded-3xl px-4 py-12 lg:py-16"></section>
+    <section id="app-gallery" class="mt-20 "></section>
+  </div>
+
+  <script>
+    let selectedAppId = APPS.find(a => a.featured)?.id ?? APPS[0]?.id;
+    let activePlatformId = null;
+
+    function detectVisitorPlatform() {
+      const ua = navigator.userAgent || '';
+      const plat = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
+      const isAndroid = /android/i.test(ua);
+      const isIOS = /iphone|ipad|ipod/i.test(ua)
+        || (plat.includes('mac') && navigator.maxTouchPoints > 1);
+      if (isIOS) return 'ios';
+      if (isAndroid) return 'android';
+      if (/win/i.test(ua) || plat.includes('win')) return 'windows';
+      if (/mac/i.test(ua) || plat.includes('mac')) return 'macos';
+      if (/linux/i.test(ua) || plat.includes('linux')) return 'linux';
+      return null;
+    }
+
+    function isMobileVisitor() {
+      const p = detectVisitorPlatform();
+      return p === 'android' || p === 'ios';
+    }
+
+    function isDesktopPlatform(pid) {
+      return pid === 'windows' || pid === 'macos' || pid === 'linux';
+    }
+
+    function isMobilePlatform(pid) {
+      return pid === 'android' || pid === 'ios';
+    }
+
+    function platformMatchesVisitor(pid) {
+      const visitor = detectVisitorPlatform();
+      if (!visitor) return true;
+      return pid === visitor;
+    }
+
+    function pickInitialPlatform(app) {
+      const ids = app.platforms || ['windows'];
+      const visitor = detectVisitorPlatform();
+      if (visitor && ids.includes(visitor)) return visitor;
+      return app.primaryPlatform || ids[0];
+    }
+
+    function appAccent(app) {
+      return (app.accentColor && app.accentColor.trim()) ? app.accentColor.trim() : (SITE.accent || '#6366f1');
+    }
+
+    function appStory(app) {
+      const s = (app.story || '').trim();
+      return s || app.description || '';
+    }
+
+    function renderCreatorStudio() {
+      const el = document.getElementById('creator-studio');
+      if (!el) return;
+      document.documentElement.style.setProperty('--site-accent', SITE.accent || '#6366f1');
+      el.innerHTML = `
+        <div class="max-w-3xl mx-auto text-center">
+          <div class="creator-avatar mx-auto mb-6 hero-in">${SITE.creatorEmoji || '✨'}</div>
+          <p class="studio-label mb-3 hero-in-d1">Creator Studio</p>
+          <h1 class="text-3xl md:text-5xl font-bold text-white mb-3 hero-in-d1">${SITE.creatorName}</h1>
+          <p class="text-lg text-zinc-300 mb-4 hero-in-d2">${SITE.creatorRole}</p>
+          <p class="text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed hero-in-d2">${SITE.tagline}</p>
+          <div class="mt-8 glass rounded-2xl p-6 text-left max-w-xl mx-auto hero-in-d3">
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">제작자 이야기</p>
+            <p class="story-block text-sm">${SITE.creatorBio}</p>
+          </div>
+        </div>`;
+    }
+
+    function renderAppNav() {
+      const nav = document.getElementById('app-nav');
+      if (!nav || !APPS.length) return;
+      if (SINGLE_MODE) { nav.innerHTML = ''; return; }
+      nav.innerHTML = APPS.map(app => {
+        const accent = appAccent(app);
+        const active = app.id === selectedAppId;
+        return `<button type="button" data-app-id="${app.id}" class="app-pill rounded-2xl px-4 py-2.5 flex items-center gap-2 ${active ? 'is-active' : ''}" style="--pill-accent:${accent}">
+          <span class="text-xl">${app.icon}</span>
+          <span class="text-sm font-semibold text-white">${app.name}</span>
+        </button>`;
+      }).join('');
+      nav.querySelectorAll('[data-app-id]').forEach(btn => btn.addEventListener('click', () => {
+        selectedAppId = btn.dataset.appId;
+        activePlatformId = null;
+        renderAppNav();
+        renderHero(APPS.find(a => a.id === selectedAppId));
+        document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
+    }
+
+    function renderGallery() {
+      const gallery = document.getElementById('app-gallery');
+      if (!gallery || SINGLE_MODE) return;
+      gallery.innerHTML = `
+        <h2 class="text-sm uppercase tracking-widest text-zinc-500 mb-6 text-center">모든 앱 이야기</h2>
+        <div class="grid gap-5 md:grid-cols-2">${APPS.map(app => {
+          const accent = appAccent(app);
+          const excerpt = appStory(app).slice(0, 120) + (appStory(app).length > 120 ? '…' : '');
+          return `<article class="gallery-card rounded-2xl p-6 cursor-pointer" data-gallery-id="${app.id}" style="--card-accent:${accent}">
+            <div class="flex gap-4 items-start mb-4">
+              <span class="text-4xl">${app.icon}</span>
+              <div>
+                <h3 class="text-lg font-bold text-white">${app.name}</h3>
+                <p class="text-sm text-zinc-400">${app.tagline}</p>
+              </div>
+            </div>
+            <p class="text-sm text-zinc-500 story-block">${excerpt}</p>
+            <p class="text-xs mt-4" style="color:${accent}">자세히 보기 →</p>
+          </article>`;
+        }).join('')}</div>`;
+      gallery.querySelectorAll('[data-gallery-id]').forEach(card => card.addEventListener('click', () => {
+        selectedAppId = card.dataset.galleryId;
+        activePlatformId = null;
+        renderAppNav();
+        renderHero(APPS.find(a => a.id === selectedAppId));
+        document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }));
+    }
+
+    function getFiltered() {
+      return APPS;
+    }
+
+    function platformChannel(app, pid) {
+      const map = app.platformChannels || {};
+      return map[pid] || 'direct';
+    }
+
+    function channelMeta(channelId) {
+      return CHANNEL_META[channelId] || CHANNEL_META.direct;
+    }
+
+    function platformUrl(app, pid) {
+      const map = app.platformDownloads || {};
+      if (map[pid] && map[pid].trim()) return map[pid].trim();
+      if (pid === app.primaryPlatform) return app.downloadUrl || '';
+      return '';
+    }
+
+    function platformLabel(app) {
+      const ids = app.platforms || [];
+      return ids.map(id => PLATFORM_META[id]?.shortLabel || id).join(' · ');
+    }
+
+    function renderLinkButton(app, pid, { compact = false, forceMismatch = false } = {}) {
+      const url = platformUrl(app, pid);
+      const plat = PLATFORM_META[pid] || PLATFORM_META.windows;
+      const chId = platformChannel(app, pid);
+      const ch = channelMeta(chId);
+      if (!url) {
+        return compact ? '' : '<p class="text-sm text-zinc-500 mt-4 px-4 py-3 rounded-xl bg-white/5 inline-block">이 플랫폼은 준비 중입니다</p>';
+      }
+      const label = chId !== 'direct'
+        ? ch.ctaLabel
+        : (pid === app.primaryPlatform && app.downloadLabel ? app.downloadLabel : (plat.defaultLabel || plat.label + '용 다운로드'));
+      const extIcon = ch.isStore
+        ? '<svg class="w-4 h-4 opacity-70" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H8M17 7V16"/></svg>'
+        : '<svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M3 12.5l7-7v4.5h11v5H10v4.5l-7-7z"/></svg>';
+      const target = ch.isStore ? ' target="_blank" rel="noopener noreferrer"' : '';
+      const visitor = detectVisitorPlatform();
+      const mismatch = forceMismatch || (visitor && visitor !== pid);
+      const isMobileTarget = pid === 'android' || pid === 'ios';
+      const isDesktopTarget = pid === 'windows' || pid === 'macos' || pid === 'linux';
+      const needMobile = mismatch && isMobileTarget && !isMobileVisitor();
+      const needDesktop = mismatch && isDesktopTarget && isMobileVisitor();
+      if (ch.isStore) {
+        if (compact) {
+          return `<a href="${url}"${target} class="platform-dl-btn store-btn text-xs px-3 py-2 rounded-lg text-zinc-200 inline-flex items-center gap-2">${ch.emoji} ${ch.label}</a>`;
+        }
+        return `
+          <a href="${url}"${target} class="store-btn platform-dl-btn mt-4 inline-flex items-center gap-4 rounded-2xl px-5 py-4 text-left max-w-sm w-full">
+            <span class="text-3xl">${ch.emoji}</span>
+            <span class="flex-1 min-w-0">
+              <span class="store-badge inline-block mb-1">${ch.badgeLabel}</span>
+              <span class="block text-sm font-semibold text-white leading-tight">${label}</span>
+              <span class="block text-xs text-zinc-500 mt-0.5">${ch.label}에서 설치 · 업데이트</span>
+            </span>
+            ${extIcon}
+          </a>`;
+      }
+      const suffix = needMobile
+        ? ' <span class="text-xs opacity-80">(폰에서 받기)</span>'
+        : needDesktop
+          ? ' <span class="text-xs opacity-80">(PC에서 받기)</span>'
+          : (!mismatch ? ' <span class="text-xs opacity-80">· 업데이트</span>' : '');
+      const btnCls = compact
+        ? 'platform-dl-btn text-xs px-3 py-2 rounded-lg inline-flex items-center gap-1 '
+          + (mismatch ? 'mismatch-dl-btn' : 'bg-white/5 hover:bg-white/10 border border-white/5 text-zinc-300')
+        : 'platform-dl-btn download-btn inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white mt-4';
+      const prefix = needMobile ? '📱 ' : needDesktop ? '💻 ' : (mismatch ? '⚠️ ' : '⬇️ ');
+      return `<button type="button" data-wdm-download data-wdm-app="${app.id}" data-wdm-platform="${pid}" class="${btnCls}">${prefix}${extIcon}${label}${suffix}</button>`;
+    }
+
+    function renderPlatformSection(app) {
+      const ids = app.platforms || ['windows'];
+      const primary = app.primaryPlatform || ids[0];
+      const visitor = detectVisitorPlatform();
+      if (!activePlatformId || !ids.includes(activePlatformId)) {
+        activePlatformId = pickInitialPlatform(app);
+      }
+      const active = PLATFORM_META[activePlatformId] || PLATFORM_META.windows;
+      const showMismatch = visitor && !platformMatchesVisitor(activePlatformId);
+
+      const chips = ids.map((pid, i) => {
+        const meta = PLATFORM_META[pid] || { label: pid, emoji: '📦', color: '#6366f1' };
+        const isActive = pid === activePlatformId;
+        const isPrimary = pid === primary;
+        const isStore = channelMeta(platformChannel(app, pid)).isStore;
+        const isVisitorMatch = visitor && pid === visitor;
+        return `
+          <button type="button" data-pid="${pid}"
+            class="platform-chip glass rounded-2xl px-4 py-3 flex items-center gap-2 border ${isActive ? 'active border-indigo-400/60' : 'border-white/5'} ${isVisitorMatch ? 'is-visitor-match' : ''}"
+            style="--i:${i}; ${isActive ? 'border-color:'+meta.color+'55' : ''}">
+            <span class="text-2xl">${meta.emoji}</span>
+            <div class="text-left">
+              <p class="text-sm font-semibold text-white flex items-center gap-1.5 flex-wrap">
+                ${meta.label}
+                ${isVisitorMatch ? '<span class="visitor-badge">이 기기용</span>' : ''}
+                ${isStore ? '<span class="chip-store-dot" title="공식 스토어"></span>' : ''}
+                ${isPrimary ? '<span class="text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">메인</span>' : ''}
+              </p>
+              <p class="text-[10px] text-zinc-500">${isStore ? channelMeta(platformChannel(app,pid)).label : meta.shortLabel}</p>
+            </div>
+          </button>`;
+      }).join('');
+
+      const activeCh = channelMeta(platformChannel(app, activePlatformId));
+      const dlSection = renderLinkButton(app, activePlatformId);
+      const hintText = activeCh.isStore
+        ? activeCh.label + ' 공식 페이지로 이동합니다'
+        : active.downloadHint;
+
+      const mismatchBanner = showMismatch ? `
+        <div class="mismatch-banner mt-4 max-w-md mx-auto">
+          <p class="text-sm font-semibold text-amber-200">⚠️ 지금 기기와 다른 버전이에요</p>
+          <p class="text-xs text-amber-100/80 mt-1 leading-relaxed">
+            ${isMobileVisitor() && isDesktopPlatform(activePlatformId)
+              ? 'Windows/Mac 앱은 휴대폰에서 실행할 수 없어요. 버튼을 누르면 PC로 보낼 링크가 나옵니다.'
+              : !isMobileVisitor() && isMobilePlatform(activePlatformId)
+                ? 'Android/iOS 앱은 스마트폰에서 받으세요. 버튼 → QR 코드 — GitHub·압축 해제 없이 한 번에 설치·업데이트.'
+                : '다른 OS용이어도 버튼 한 번으로 파일을 받을 수 있어요. 실행은 해당 기기에서 하세요.'}
+          </p>
+        </div>` : '';
+
+      const otherIds = ids.filter(pid => pid !== activePlatformId);
+      let othersHtml = '';
+      if (otherIds.length) {
+        if (isMobileVisitor()) {
+          const mobileOthers = otherIds.filter(pid => isMobilePlatform(pid));
+          const desktopOthers = otherIds.filter(pid => isDesktopPlatform(pid));
+          if (mobileOthers.length) {
+            othersHtml += '<p class="text-xs text-zinc-500 mt-6 mb-2">다른 모바일</p><div class="flex flex-wrap justify-center gap-2">'
+              + mobileOthers.map(pid => renderLinkButton(app, pid, { compact: true })).filter(Boolean).join('') + '</div>';
+          }
+          if (desktopOthers.length) {
+            othersHtml += `<details class="mt-4 max-w-md mx-auto text-left">
+              <summary class="text-xs text-zinc-500 cursor-pointer select-none">PC용 다운로드 보기 (이 휴대폰에서는 실행 불가)</summary>
+              <div class="flex flex-wrap gap-2 mt-3">${desktopOthers.map(pid => renderLinkButton(app, pid, { compact: true, forceMismatch: true })).filter(Boolean).join('')}</div>
+            </details>`;
+          }
+        } else {
+          const row = otherIds.map(pid => renderLinkButton(app, pid, { compact: true })).filter(Boolean).join('');
+          if (row) othersHtml = '<div class="flex flex-wrap justify-center gap-2 mt-6">' + row + '</div>';
+        }
+      }
+
+      return `
+        <div class="mt-10 hero-in-d3">
+          <p class="text-xs uppercase tracking-widest text-zinc-500 mb-4">지원 플랫폼 · ${ids.length}개</p>
+          <div class="flex flex-wrap justify-center gap-3 mb-6">${chips}</div>
+          <div class="platform-detail glass rounded-2xl p-6 max-w-md mx-auto text-center enter" id="platform-detail">
+            <p class="text-3xl mb-2">${active.emoji}</p>
+            <p class="text-lg font-semibold text-white mb-1">${active.label}에서 사용 가능</p>
+            <p class="text-sm text-zinc-400 leading-relaxed mb-1">${active.description}</p>
+            <p class="text-xs text-zinc-600">${hintText}</p>
+            ${mismatchBanner}
+            ${dlSection}
+          </div>
+          ${othersHtml}
+        </div>`;
+    }
+
+    function bindPlatformChips(app) {
+      document.querySelectorAll('[data-pid]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          activePlatformId = btn.dataset.pid;
+          const hero = document.getElementById('hero');
+          const scrollY = window.scrollY;
+          renderHero(app);
+          window.scrollTo(0, scrollY);
+        });
+      });
+    }
+
+    function renderHero(app) {
+      const hero = document.getElementById('hero');
+      if (!app) { hero.innerHTML = '<p class="text-zinc-500 text-center">앱이 없습니다.</p>'; return; }
+      const accent = appAccent(app);
+      document.documentElement.style.setProperty('--app-accent', accent);
+      const cat = CATEGORY_LABELS[app.category] || app.category;
+      const story = appStory(app);
+      hero.innerHTML = `
+        <div class="text-center max-w-2xl mx-auto">
+          <div class="text-5xl mb-6 app-icon-float hero-in">${app.icon}</div>
+          <p class="text-xs uppercase tracking-widest mb-3 hero-in-d1" style="color:${accent}">${cat} · ${platformLabel(app)}</p>
+          <h2 class="text-4xl md:text-5xl font-bold text-white mb-4 hero-in-d1">${app.name}</h2>
+          <p class="text-lg text-zinc-300 mb-6 hero-in-d2">${app.tagline}</p>
+          <div class="glass rounded-2xl p-6 text-left mb-8 hero-in-d2">
+            <p class="text-xs uppercase tracking-widest text-zinc-500 mb-3">이 앱에 대해</p>
+            <p class="story-block text-sm md:text-base">${story}</p>
+          </div>
+          ${renderPlatformSection(app)}
+          <p class="text-xs text-zinc-600 mt-8">v${app.version}</p>
+        </div>`;
+      bindPlatformChips(app);
+    }
+
+    function renderList() {
+      const app = APPS.find(a => a.id === selectedAppId) ?? APPS[0];
+      if (app) {
+        selectedAppId = app.id;
+        activePlatformId = null;
+        renderHero(app);
+      }
+    }
+
+    function renderCategories() {}
+
+        function detectVisitorOs() {
+      const ua = navigator.userAgent || '';
+      const plat = (navigator.userAgentData?.platform || navigator.platform || '').toLowerCase();
+      if (/win/i.test(ua) || plat.includes('win')) return 'windows';
+      if (/mac/i.test(ua) || plat.includes('mac')) return 'macos';
+      return null;
+    }
+
+    function renderManagerBar() {
+      if (!MANAGER_SELF?.show) return;
+      const bar = document.getElementById('wdm-bar');
+      if (!bar) return;
+      const os = detectVisitorOs();
+      const meta = {
+        windows: { emoji: '🪟', label: 'Windows', ext: '.exe' },
+        macos: { emoji: '🍎', label: 'Mac', ext: '.dmg' }
+      };
+      const buttons = ['windows', 'macos'].map(pid => {
+        const url = (MANAGER_SELF.downloads?.[pid] || '').trim();
+        const m = meta[pid];
+        const isCurrent = os === pid;
+        const cls = [
+          'wdm-bar-btn inline-flex items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold border',
+          url ? 'bg-white/5 hover:bg-white/10 border-white/10 text-zinc-200' : 'is-disabled bg-white/5 border-white/5 text-zinc-500',
+          isCurrent && url ? 'is-current' : ''
+        ].filter(Boolean).join(' ');
+        if (!url) {
+          return `<span class="${cls}">${m.emoji} ${m.label} 준비 중</span>`;
+        }
+        return `<button type="button" data-wdm-manager-dl="${pid}" class="${cls}"${isCurrent ? ' title="이 기기용 다운로드 · 업데이트"' : ''}>${m.emoji} ${m.label} ${m.ext}</button>`;
+      }).join('');
+
+      bar.innerHTML = `
+        <div class="max-w-6xl mx-auto flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div class="min-w-0">
+            <p class="text-sm font-semibold text-white flex items-center gap-2 flex-wrap">
+              <span aria-hidden="true">🌐</span>
+              <span>Web Deploy 다운로드</span>
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300">v${MANAGER_SELF.version}</span>
+            </p>
+            <p class="text-xs text-zinc-500 mt-0.5">이 랜딩 페이지를 만드는 Manager 앱 — 업데이트가 필요할 때 받으세요</p>
+          </div>
+          <div class="flex flex-wrap gap-2 shrink-0">${buttons}</div>
+        </div>`;
+    }
+
+    renderCreatorStudio();
+    renderAppNav();
+    renderList();
+    renderGallery();
+    renderManagerBar();
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "schema": "web-deploy-manager/live/v1",
+  "id": "focusgate",
+  "name": "FocusGate",
+  "version": "1.0",
+  "build": 0,
+  "versionLabel": "1.0",
+  "updatedAt": "2026-06-16T09:36:37.994919Z",
+  "downloads": {}
+}

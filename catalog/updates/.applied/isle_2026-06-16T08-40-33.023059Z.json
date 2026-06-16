@@ -1,0 +1,23 @@
+{
+  "schema": "web-deploy-manager/update/v1",
+  "id": "isle",
+  "name": "Isle",
+  "tagline": "알고리즘에 휘둘리지 않는 나만의 콘텐츠 섬",
+  "description": "RSS·유튜브·브런치를 한곳에서 큐레이션하고, SNS·Safari·다른 앱을 스케줄로 차단합니다. Hive 로컬 저장 — 업데이트 시 동일 applicationId·번들 ID로 데이터가 유지됩니다.",
+  "version": "1.6.0+198",
+  "category": "productivity",
+  "platforms": [
+    "android"
+  ],
+  "primaryPlatform": "android",
+  "platformDownloads": {},
+  "platformChannels": {
+    "android": "direct"
+  },
+  "downloadUrl": "https://github.com/delight0517/isle",
+  "downloadLabel": "Windows용 다운로드 (.exe)",
+  "icon": "🏝️",
+  "featured": true,
+  "githubUrl": "https://github.com/delight0517/isle",
+  "droppedAt": "2026-06-16T08:40:28.852927Z"
+}

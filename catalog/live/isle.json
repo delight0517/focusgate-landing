@@ -1,0 +1,12 @@
+{
+  "schema": "web-deploy-manager/live/v1",
+  "id": "isle",
+  "name": "Isle",
+  "version": "1.6.0",
+  "build": 205,
+  "versionLabel": "1.6.0+205",
+  "updatedAt": "2026-06-16T09:36:37.994672Z",
+  "downloads": {
+    "android": "https://github.com/delight0517/isle/releases/download/v1.6.0/isle_v1.6.0+205_android.apk"
+  }
+}
