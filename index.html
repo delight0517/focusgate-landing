@@ -64,10 +64,12 @@
       ],
       "primaryPlatform": "windows",
       "platformDownloads": {
-        "windows": "https://github.com/delight0517/FocusFense-Downloads/releases/download/windows-v1.0.0%2B760/FocusFence-Pomodoro-Windows-v1.0.0%2B760.zip"
+        "windows": "https://github.com/delight0517/FocusFense-Downloads/releases/download/windows-v1.0.0%2B760/FocusFence-Pomodoro-Windows-v1.0.0%2B760.zip",
+        "macos": "https://github.com/delight0517-art/3f-browser/releases/download/mac-focus-fence-v1.0.7%2B2026112602/FocusFence-macOS-v1.0.7%2B2026112602.zip"
       },
       "platformChannels": {
-        "windows": "direct"
+        "windows": "direct",
+        "macos": "direct"
       },
       "downloadLabel": "Windows 다운로드 (v1.0.0+760 .zip)",
       "icon": "🛡️",
@@ -100,7 +102,7 @@
     android: { label: 'Android', emoji: '🤖', mobile: true, exts: ['.apk'] },
     ios: { label: 'iOS', emoji: '📱', mobile: true, exts: ['.ipa'] },
     windows: { label: 'Windows', emoji: '🪟', mobile: false, exts: ['.exe', '.msi', '.zip'] },
-    macos: { label: 'macOS', emoji: '🍎', mobile: false, exts: ['.dmg', '.pkg'] },
+    macos: { label: 'macOS', emoji: '🍎', mobile: false, exts: ['.dmg', '.pkg', '.zip'] },
     linux: { label: 'Linux', emoji: '🐧', mobile: false, exts: ['.appimage', '.deb', '.tar.gz', '.zip'] }
   };
 
@@ -311,7 +313,7 @@
       android: '<h3 style="margin:0 0 12px">📲 Android 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>다운로드된 .apk 탭</li><li>「알 수 없는 앱」 허용 (필요 시)</li><li>이미 있으면 <strong>업데이트</strong> — 데이터 유지</li></ol>',
       ios: '<h3 style="margin:0 0 12px">📱 iOS</h3><p style="font-size:13px;color:#d4d4d8;line-height:1.6">App Store / TestFlight 페이지에서 <strong>업데이트</strong> 또는 <strong>받기</strong>를 누르세요.</p>',
       windows: '<h3 style="margin:0 0 12px">🪟 Windows 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>다운로드된 .exe 실행</li><li>「Windows가 PC를 보호」 → <strong>추가 정보</strong> → 실행</li><li>이미 설치됐으면 <strong>업데이트</strong> — 설정·데이터 유지</li></ol>',
-      macos: '<h3 style="margin:0 0 12px">🍎 Mac 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>.dmg 열기 → 앱을 Applications로 드래그</li><li>기존 앱이 있으면 <strong>덮어쓰기</strong></li><li>데이터는 ~/Library 에 그대로 유지</li></ol>',
+      macos: '<h3 style="margin:0 0 12px">🍎 Mac 설치</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>.zip 압축 해제 후 <strong>install.command</strong> 실행 (또는 .dmg 열기 → Applications로 드래그)</li><li>기존 앱이 있으면 덮어쓰기 업데이트</li><li>앱 안에서 3F Browser 원클릭 설치 및 다른 브라우저 차단 설정 가능</li></ol>',
       linux: '<h3 style="margin:0 0 12px">🐧 Linux</h3><ol style="font-size:13px;color:#d4d4d8;line-height:1.7;padding-left:1.2rem;margin:0"><li>.AppImage → 실행 권한 부여 후 실행</li><li>.deb → 패키지 관리자로 설치</li></ol>'
     };
     const html = tips[pid];
