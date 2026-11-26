@@ -1,10 +1,13 @@
 {
   "schema": "web-deploy-manager/live/v1",
   "id": "focusgate",
-  "name": "FocusGate",
-  "version": "1.0",
-  "build": 0,
-  "versionLabel": "1.0",
-  "updatedAt": "2026-06-16T09:36:37.994919Z",
-  "downloads": {}
+  "name": "FocusFence × Pomodoro",
+  "version": "1.0.0+760",
+  "build": 760,
+  "versionLabel": "1.0.0+760 (macOS v1.0.7+2026112602)",
+  "updatedAt": "2026-11-26T13:35:00Z",
+  "downloads": {
+    "windows": "https://github.com/delight0517/FocusFense-Downloads/releases/download/windows-v1.0.0%2B760/FocusFence-Pomodoro-Windows-v1.0.0%2B760.zip",
+    "macos": "https://github.com/delight0517-art/3f-browser/releases/download/mac-focus-fence-v1.0.7%2B2026112602/FocusFence-macOS-v1.0.7%2B2026112602.zip"
+  }
 }
